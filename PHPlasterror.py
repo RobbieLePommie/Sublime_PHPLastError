@@ -20,14 +20,23 @@ class phplasterrorCommand(sublime_plugin.TextCommand):
             if os.path.exists(log_file):
                 # Open the file and read the last line
                 with open(log_file, "r") as f:
+
+                    if settings.has('num_byes_to_read'):
+                        num_bytes = settings.get('num_byes_to_read')
+                    else:
+                        num_bytes = 2048
+
                     f.seek(0, 2)           # Seek @ EOF
                     fsize = f.tell()        # Get Size
-                    f.seek(max(fsize-1024, 0), 0)    # Set pos @ last n chars
+                    f.seek(max(fsize-4096, 0), 0)    # Set pos @ last n chars
                     lines = f.readlines()     # Read to end
                     file_name = False
                     first_line = 'Empty File'
                     reading_line = -1
-                    while lines[reading_line] and reading_line > -10 and not file_name:
+                    sublime.status_message('line ' + str(reading_line))
+
+                    while reading_line > 0 - len(lines) and lines[reading_line] and not file_name:
+                        sublime.status_message('line ' + str(reading_line))
                         line = lines[reading_line]  # Get last Line
                         if reading_line == -1:
                             first_line = line
