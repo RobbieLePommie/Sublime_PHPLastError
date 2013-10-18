@@ -28,23 +28,42 @@ class phplasterrorCommand(sublime_plugin.TextCommand):
 
                     f.seek(0, 2)           # Seek @ EOF
                     fsize = f.tell()        # Get Size
-                    f.seek(max(fsize-4096, 0), 0)    # Set pos @ last n chars
+                    f.seek(max(fsize-num_bytes, 0), 0)    # Set pos @ last n chars
                     lines = f.readlines()     # Read to end
                     file_name = False
                     first_line = 'Empty File'
                     reading_line = -1
                     sublime.status_message('line ' + str(reading_line))
+                    hasError = 0;
+                    inTrace = 0;
 
-                    while reading_line > 0 - len(lines) and lines[reading_line] and not file_name:
+                    while reading_line > 0 - len(lines) and lines[reading_line] and not hasError:
                         sublime.status_message('line ' + str(reading_line))
                         line = lines[reading_line]  # Get last Line
                         if reading_line == -1:
                             first_line = line
-                        matchObj = re.match('\[(.*)\] (.*) in (.*) on line (.*)', line)
+
+                        matchObj = re.match('\[(.*)\] (.*)', line)
                         if matchObj:
                             error = matchObj.group(2)
-                            file_name = matchObj.group(3)
-                            line_num = matchObj.group(4)
+                            if error[:2] == '- ':     # Fat Free Error Logs
+                                matchObj2 = re.match('(.*?):([0-9]*) .*', error[2:])
+                                if matchObj2:
+                                    inTrace = 1
+                                    file_name = matchObj2.group(1)
+                                    line_num = matchObj2.group(2)
+
+                            elif inTrace:
+                                hasError=1	#Get out, using this line as the error message
+
+                            else :
+                                matchObj2 = re.match('(.*) in (.*) on line (.*)', error)
+                                if matchObj2:
+                                    error = matchObj2.group(1)
+                                    file_name = matchObj2.group(2)
+                                    line_num = matchObj2.group(3)
+                                    hasError = 1;
+
                         reading_line = reading_line - 1
 
                     if file_name:
