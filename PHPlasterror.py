@@ -33,17 +33,15 @@ class phplasterrorCommand(sublime_plugin.TextCommand):
                     file_name = False
                     first_line = 'Empty File'
                     reading_line = -1
-                    sublime.status_message('line ' + str(reading_line))
                     hasError = 0;
                     inTrace = 0;
 
                     while reading_line > 0 - len(lines) and lines[reading_line] and not hasError:
-                        sublime.status_message('line ' + str(reading_line))
                         line = lines[reading_line]  # Get last Line
                         if reading_line == -1:
                             first_line = line
 
-                        matchObj = re.match('\[(.*)\] (.*)', line)
+                        matchObj = re.match('\[(.*)\] (PHP .*)', line)
                         if matchObj:
                             error = matchObj.group(2)
                             if error[:2] == '- ':     # Fat Free Error Logs
@@ -57,12 +55,18 @@ class phplasterrorCommand(sublime_plugin.TextCommand):
                                 hasError=1	#Get out, using this line as the error message
 
                             else :
-                                matchObj2 = re.match('(.*) in (.*) on line (.*)', error)
+                                matchObj2 = re.match('(PHP .*?): (.*) in ([^ ]*) on line ([0-9]*)', error)
+
                                 if matchObj2:
-                                    error = matchObj2.group(1)
-                                    file_name = matchObj2.group(2)
-                                    line_num = matchObj2.group(3)
+                                    errorType = matchObj2.group(1)
+                                    error = matchObj2.group(2)
+                                    file_name = matchObj2.group(3)
+                                    line_num = matchObj2.group(4)
                                     hasError = 1;
+                        else :
+                            sublime.status_message('No Match : ')
+
+
 
                         reading_line = reading_line - 1
 
